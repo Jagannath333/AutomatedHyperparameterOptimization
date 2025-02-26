@@ -1,0 +1,52 @@
+import pandas as pd
+
+# Load the Titanic dataset (Make sure the path is correct if the file is local)
+titanic_data = pd.read_csv('/content/titanic passenger list.csv')
+
+# Show the first few rows of the dataset
+print(titanic_data.head())
+
+# Get basic info about the dataset (e.g., number of missing values, data types)
+print(titanic_data.info())
+
+# Fill missing 'Age' values with the median
+titanic_data['age'].fillna(titanic_data['age'].median(), inplace=True)
+
+# Fill missing 'Embarked' values with the most frequent port of embarkation (mode)
+titanic_data['embarked'].fillna(titanic_data['embarked'].mode()[0], inplace=True)
+
+# Drop the 'Cabin' column because it has too many missing values
+titanic_data.drop(columns=['cabin'], inplace=True)
+
+# Encode 'Sex' column: Male = 0, Female = 1
+titanic_data['sex'] = titanic_data['sex'].map({'male': 0, 'female': 1})
+
+# Encode 'Embarked' column: C = 0, Q = 1, S = 2
+titanic_data['embarked'] = titanic_data['embarked'].map({'C': 0, 'Q': 1, 'S': 2})
+
+# Define feature matrix (X) and target variable (y)
+X = titanic_data[['pclass', 'sex', 'age', 'sibsp', 'parch', 'fare', 'embarked']]
+y = titanic_data['survived']
+
+from sklearn.model_selection import train_test_split
+
+# Split the dataset into 80% training and 20% testing
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+pip install tpot
+
+
+from tpot import TPOTClassifier
+
+# Initialize TPOT (you can adjust generations and population_size for more exhaustive search)
+tpot = TPOTClassifier(verbosity=2, generations=5, population_size=20, random_state=42)
+
+# Train the model
+tpot.fit(X_train, y_train)
+
+# Evaluate the model on the test set
+print(f"Test Accuracy: {tpot.score(X_test, y_test):.2f}")
+
+# Export the best pipeline (model and preprocessing steps)
+tpot.export('best_tpot_model.py')
+
